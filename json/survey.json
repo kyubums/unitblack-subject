@@ -275,7 +275,8 @@
             "label": "학습/취미",
             "nextQuestionId": "q6_workstyle"
           }
-        ]
+        ],
+        "required": true
       },
       {
         "id": "q3_workstyle",
