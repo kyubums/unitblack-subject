@@ -237,7 +237,7 @@
         "type": "text",
         "text": "관련하여 직접 해결한 문제 사례를 간단히 적어주세요.",
         "required": true,
-        "next": [
+        "next ??": [
           {
             "when": {
               "anySelectedIn": {
@@ -253,7 +253,8 @@
             "default": true,
             "go": "q6_workstyle"
           }
-        ]
+        ],
+        "nextQuestionId": "q6_workstyle"
       },
       {
         "id": "q6_sfu",
