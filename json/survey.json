@@ -1,0 +1,363 @@
+{
+  "unitblack-join-survey": {
+    "id": "unitblack-join-survey",
+    "title": "우리회사 지원 동기 설문",
+    "version": 1,
+    "startQuestionId": "q1",
+    "questions": [
+      {
+        "id": "q1",
+        "type": "singleChoice",
+        "text": "우리 회사에 지원하는 주된 이유는 무엇인가요?",
+        "options": [
+          {
+            "id": "q1o1",
+            "label": "임팩트 있는 문제를 해결하고 싶어서",
+            "nextQuestionId": "q2_impact"
+          },
+          {
+            "id": "q1o2",
+            "label": "기술적 도전을 원해서",
+            "nextQuestionId": "q2_tech"
+          },
+          {
+            "id": "q1o3",
+            "label": "조직 문화/동료가 좋아서",
+            "nextQuestionId": "q2_culture"
+          },
+          {
+            "id": "q1o4",
+            "label": "보상/성장 기회",
+            "nextQuestionId": "q2_growth"
+          },
+          {
+            "id": "q1o5",
+            "label": "지인 추천",
+            "nextQuestionId": "q2_ref"
+          },
+          {
+            "id": "q1o6",
+            "label": "기타",
+            "nextQuestionId": "q1_other"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q1_other",
+        "type": "text",
+        "text": "기타인 이유를 구체적으로 알려주세요.",
+        "required": true,
+        "nextQuestionId": "q2_culture"
+      },
+      {
+        "id": "q2_impact",
+        "type": "singleChoice",
+        "text": "어떤 임팩트를 가장 중요하게 보시나요?",
+        "options": [
+          {
+            "id": "q2i_o1",
+            "label": "수백만 사용자에게 가는 제품 임팩트",
+            "nextQuestionId": "q3_scale"
+          },
+          {
+            "id": "q2i_o2",
+            "label": "사회적/공공의 선",
+            "nextQuestionId": "q3_social"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2_tech",
+        "type": "singleChoice",
+        "text": "가장 매력적인 기술 영역은?",
+        "options": [
+          {
+            "id": "q2t_o1",
+            "label": "분산 시스템/고가용성",
+            "nextQuestionId": "q3_tech_stack"
+          },
+          {
+            "id": "q2t_o2",
+            "label": "대규모 실시간 스트리밍(미디어/웹RTC)",
+            "nextQuestionId": "q3_tech_stack"
+          },
+          {
+            "id": "q2t_o3",
+            "label": "데이터 플랫폼/파이프라인",
+            "nextQuestionId": "q3_tech_stack"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2_culture",
+        "type": "singleChoice",
+        "text": "문화적으로 가장 중요한 가치는?",
+        "options": [
+          {
+            "id": "q2c_o1",
+            "label": "주도성/오너십",
+            "nextQuestionId": "q3_workstyle"
+          },
+          {
+            "id": "q2c_o2",
+            "label": "개방적 커뮤니케이션",
+            "nextQuestionId": "q3_workstyle"
+          },
+          {
+            "id": "q2c_o3",
+            "label": "학습/성장",
+            "nextQuestionId": "q3_workstyle"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2_growth",
+        "type": "singleChoice",
+        "text": "성장 관련 어떤 요소가 중요한가요?",
+        "options": [
+          {
+            "id": "q2g_o1",
+            "label": "보상/스톡옵션",
+            "nextQuestionId": "q3_comp"
+          },
+          {
+            "id": "q2g_o2",
+            "label": "커리어 레버리지(브랜드/레벨)",
+            "nextQuestionId": "q3_comp"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q2_ref",
+        "type": "text",
+        "text": "추천해준 분과 계기를 알려주세요.",
+        "required": false,
+        "nextQuestionId": "q3_workstyle"
+      },
+      {
+        "id": "q3_scale",
+        "type": "singleChoice",
+        "text": "대규모 트래픽 경험 유무를 선택하세요.",
+        "options": [
+          {
+            "id": "q3s_o1",
+            "label": "있다 (매출/DAU 수치 기재)",
+            "nextQuestionId": "q4_scale_detail"
+          },
+          {
+            "id": "q3s_o2",
+            "label": "없다",
+            "nextQuestionId": "q3_workstyle"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q4_scale_detail",
+        "type": "text",
+        "text": "경험 수치(DAU/분당요청/매출 등)를 입력하세요.",
+        "required": true,
+        "nextQuestionId": "q3_workstyle"
+      },
+      {
+        "id": "q3_social",
+        "type": "text",
+        "text": "사회적 임팩트로 어떤 문제를 해결하고 싶은가요?",
+        "required": true,
+        "nextQuestionId": "q3_workstyle"
+      },
+      {
+        "id": "q3_tech_stack",
+        "type": "multiChoice",
+        "text": "선호/숙련 스택을 고르세요.",
+        "options": [
+          {
+            "id": "q3t_o1",
+            "label": "NestJS"
+          },
+          {
+            "id": "q3t_o2",
+            "label": "Kotlin/Java"
+          },
+          {
+            "id": "q3t_o3",
+            "label": "Go"
+          },
+          {
+            "id": "q3t_o4",
+            "label": "PostgreSQL"
+          },
+          {
+            "id": "q3t_o5",
+            "label": "MongoDB"
+          },
+          {
+            "id": "q3t_o6",
+            "label": "Redis"
+          },
+          {
+            "id": "q3t_o7",
+            "label": "WebRTC/mediasoup"
+          }
+        ],
+        "minSelect": 1,
+        "maxSelect": 5,
+        "nextQuestionId": "q4_tech_depth"
+      },
+      {
+        "id": "q4_tech_depth",
+        "type": "singleChoice",
+        "text": "가장 깊이 파본 영역은?",
+        "options": [
+          {
+            "id": "q4t_o1",
+            "label": "트랜잭션/락/쿼리 최적화",
+            "nextQuestionId": "q5_example"
+          },
+          {
+            "id": "q4t_o2",
+            "label": "분산/일관성/내고장성",
+            "nextQuestionId": "q5_example"
+          },
+          {
+            "id": "q4t_o3",
+            "label": "미디어 실시간 송수신/코덱",
+            "nextQuestionId": "q5_example"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q5_example",
+        "type": "text",
+        "text": "관련하여 직접 해결한 문제 사례를 간단히 적어주세요.",
+        "required": true,
+        "next": [
+          {
+            "when": {
+              "anySelectedIn": {
+                "questionId": "q3_tech_stack",
+                "optionIds": [
+                  "q3t_o7"
+                ]
+              }
+            },
+            "go": "q6_sfu"
+          },
+          {
+            "default": true,
+            "go": "q6_workstyle"
+          }
+        ]
+      },
+      {
+        "id": "q6_sfu",
+        "type": "singleChoice",
+        "text": "WebRTC/SFU 경험 수준은?",
+        "options": [
+          {
+            "id": "q6s_o1",
+            "label": "프로덕션 운영",
+            "nextQuestionId": "q6_workstyle"
+          },
+          {
+            "id": "q6s_o2",
+            "label": "PoC/프로토타입",
+            "nextQuestionId": "q6_workstyle"
+          },
+          {
+            "id": "q6s_o3",
+            "label": "학습/취미",
+            "nextQuestionId": "q6_workstyle"
+          }
+        ]
+      },
+      {
+        "id": "q3_workstyle",
+        "type": "singleChoice",
+        "text": "본인의 업무 스타일을 고르세요.",
+        "options": [
+          {
+            "id": "q3w_o1",
+            "label": "오너십 강함(문제정의~운영)",
+            "nextQuestionId": "q6_workstyle"
+          },
+          {
+            "id": "q3w_o2",
+            "label": "협업/커뮤니케이션 중심",
+            "nextQuestionId": "q6_workstyle"
+          },
+          {
+            "id": "q3w_o3",
+            "label": "탐구형/깊이 파고듦",
+            "nextQuestionId": "q6_workstyle"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q6_workstyle",
+        "type": "text",
+        "text": "최근 6개월 내 일한 방식 중 스스로 잘했다 생각하는 사례는?",
+        "required": true,
+        "nextQuestionId": "q7_values"
+      },
+      {
+        "id": "q3_comp",
+        "type": "singleChoice",
+        "text": "중요한 보상 형태는?",
+        "options": [
+          {
+            "id": "q3c_o1",
+            "label": "현금 급여",
+            "nextQuestionId": "q7_values"
+          },
+          {
+            "id": "q3c_o2",
+            "label": "스톡옵션/성과보상",
+            "nextQuestionId": "q7_values"
+          }
+        ],
+        "required": true
+      },
+      {
+        "id": "q7_values",
+        "type": "multiChoice",
+        "text": "우리 회사의 어떤 가치에 공감하시나요? (복수 선택)",
+        "options": [
+          {
+            "id": "q7v_o1",
+            "label": "고객집착"
+          },
+          {
+            "id": "q7v_o2",
+            "label": "정직/투명"
+          },
+          {
+            "id": "q7v_o3",
+            "label": "속도와 실행"
+          },
+          {
+            "id": "q7v_o4",
+            "label": "장인정신"
+          }
+        ],
+        "minSelect": 1,
+        "maxSelect": 3,
+        "nextQuestionId": "q8_final"
+      },
+      {
+        "id": "q8_final",
+        "type": "text",
+        "text": "마지막으로 하고 싶은 말이 있다면 자유롭게 작성해주세요.",
+        "required": false,
+        "nextQuestionId": null
+      }
+    ]
+  }
+}
