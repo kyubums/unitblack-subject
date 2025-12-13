@@ -1,4 +1,8 @@
+import { Survey } from './survey.schema';
+
 export interface SurveyRepository {
-  getAllServeys(): Promise<any>;
-  getServeyById(id: string): Promise<any>;
+  getAllServeys(): Promise<Survey[]>;
+  getServeyById(id: string): Promise<Survey | null>;
 }
+
+export const JSON_SURVEY_REPOSITORY = 'JSON_SURVEY_REPOSITORY';
