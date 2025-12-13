@@ -1,9 +1,9 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { CommonEntity } from './common.entity';
 import { QuestionAnswerEntity } from './question-answer.entity';
+import { CommonEntity } from './common.entity';
 
 @Entity()
-export class AnswerTextEntity extends CommonEntity {
+export class AnswerSingleChoiceEntity extends CommonEntity {
   @OneToOne(() => QuestionAnswerEntity)
   @JoinColumn()
   questionAnswer: QuestionAnswerEntity;
@@ -12,5 +12,5 @@ export class AnswerTextEntity extends CommonEntity {
   questionAnswerId: number;
 
   @Column()
-  text: string;
+  optionId: string;
 }

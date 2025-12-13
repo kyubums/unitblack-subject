@@ -1,4 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { nanoid } from 'nanoid';
 import { SurveyService } from '../survey/survey.service';
 import { QuestionAnswerProcessor } from './question-answer.processor';
@@ -12,7 +18,12 @@ import {
   SQL_SESSION_REPOSITORY,
   type SessionRepository,
 } from './session.repository';
-import { DetailSession, NewSession, Session } from './session.schema';
+import {
+  DetailSession,
+  NewSession,
+  QuestionAnswer,
+  Session,
+} from './session.schema';
 
 @Injectable()
 export class SessionService {
@@ -49,18 +60,32 @@ export class SessionService {
     return session;
   }
 
-  async getDetailSession(token: string): Promise<DetailSession> {
+  async getDetailSessionByToken(token: string): Promise<DetailSession> {
     const session = await this.getSessionByToken(token);
-    const answers = [];
+    const questionAnswers =
+      await this.questionAnswerRepository.getQuestionAnswers(session.id);
+
+    const validatedQuestionAnswers = questionAnswers.map((questionAnswer) => {
+      const questionAnswerProcessor = new QuestionAnswerProcessor(
+        questionAnswer,
+      );
+
+      try {
+        questionAnswerProcessor.validate();
+        return questionAnswerProcessor.getQuestionAnswer();
+      } catch (error) {
+        throw new InternalServerErrorException(error.message);
+      }
+    });
 
     return {
       ...session,
-      answers,
+      answers: validatedQuestionAnswers,
     };
   }
 
   async submitAnswer(token: string, dto: SubmitAnswerRequest) {
-    const detailSession = await this.getDetailSession(token);
+    const detailSession = await this.getDetailSessionByToken(token);
 
     // check if submittable
     const sessionProcessor = new SessionProcessor(detailSession);
@@ -72,10 +97,25 @@ export class SessionService {
     );
 
     // validate and build QuestionAnswer and get nextQuestionId
+    const newQuestionAnswer: QuestionAnswer = {
+      questionId: dto.questionId,
+      questionSnapshot: surveyQuestion,
+      answer: null,
+      submittedAt: new Date(0),
+    };
+
+    // submit answer and validate QuestionAnswer
     const questionAnswerProcessor = new QuestionAnswerProcessor(
-      surveyQuestion,
-      dto.answer,
+      newQuestionAnswer,
     );
+    questionAnswerProcessor.submitAnswer(dto.answer);
+
+    try {
+      questionAnswerProcessor.validate();
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+
     const questionAnswer = questionAnswerProcessor.getQuestionAnswer();
     const nextQuestionId = questionAnswerProcessor.getNextQuestionId();
     const isCompleted = nextQuestionId === null;

@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { DetailSession } from './session.schema';
 
 export class SessionProcessor {
@@ -6,7 +6,7 @@ export class SessionProcessor {
 
   checkSubmittable(questionId: string): void {
     if (this.detailSession.isCompleted) {
-      throw new BadRequestException('Session already completed');
+      throw new ForbiddenException('Session already completed');
     }
 
     if (this.detailSession.nextQuestionId !== questionId) {
@@ -14,7 +14,7 @@ export class SessionProcessor {
     }
 
     const hasSubmittedAnswer = this.detailSession.answers.some(
-      (answer) => answer.answer,
+      (answer) => answer.questionId == questionId,
     );
 
     if (hasSubmittedAnswer) {

@@ -1,4 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
+import { ItemRetriever } from '../common/item-retriever';
 import {
   AnswerOption,
   MultiChoiceQuestion,
@@ -7,143 +8,206 @@ import {
   SingleChoiceQuestion,
   TextQuestion,
 } from '../survey/survey.schema';
-import { SubmittedAnswer } from './requests/submit-answer.requests';
+import { SubmittingAnswer } from './requests/submit-answer.requests';
 import {
-  Answer,
   MultiChoiceAnswer,
-  MultiChoiceAnswerSchema,
+  QuestionAnswer,
   SingleChoiceAnswer,
-  SingleChoiceAnswerSchema,
-  TextAnswer,
-  TextAnswerSchema,
 } from './session.schema';
 
-export interface QuestionStrategy {
-  validate(submittedAnswer: SubmittedAnswer): void;
-  transform(submittedAnswer: SubmittedAnswer): Answer;
-  getNextQuestionId(submittedAnswer: SubmittedAnswer | null): string | null;
+export abstract class QuestionStrategy {
+  constructor(protected questionAnswer: QuestionAnswer) {}
+
+  validate() {
+    if (!this.questionAnswer.answer) {
+      if (this.questionAnswer.questionSnapshot.required) {
+        throw new Error('Answer is Required');
+      }
+
+      // bypass answer validation if answer is null
+      return;
+    }
+
+    if (
+      this.questionAnswer.questionSnapshot.type !==
+      this.questionAnswer.answer.type
+    ) {
+      throw new Error('Answer type mismatched with question type');
+    }
+
+    this.validateAnswer();
+  }
+
+  submitAnswer(submittingAnswer: SubmittingAnswer | null) {
+    if (submittingAnswer) {
+      this.submitFormattedAnswer(submittingAnswer);
+    }
+    this.questionAnswer.submittedAt = new Date();
+  }
+
+  getQuestionAnswer(): QuestionAnswer {
+    return this.questionAnswer;
+  }
+
+  protected abstract validateAnswer(): void;
+  protected abstract submitFormattedAnswer(
+    submittingAnswer: SubmittingAnswer,
+  ): void;
+  abstract getNextQuestionId(): string | null;
 }
 
-export class SingleChoiceQuestionAnswerStrategy implements QuestionStrategy {
-  private optionById: { [key: string]: NextQuestionAnswerOption };
+export class SingleChoiceQuestionAnswerStrategy extends QuestionStrategy {
+  private optionRetriever: ItemRetriever<NextQuestionAnswerOption, 'id'>;
 
-  constructor(private question: SingleChoiceQuestion) {
-    this.optionById = this.question.options.reduce(
-      (acc, option) => {
-        acc[option.id] = option;
-        return acc;
-      },
-      {} as { [key: string]: AnswerOption },
+  constructor(
+    protected questionAnswer: QuestionAnswer & {
+      questionSnapshot: SingleChoiceQuestion;
+    },
+  ) {
+    super(questionAnswer);
+
+    this.optionRetriever = new ItemRetriever(
+      questionAnswer.questionSnapshot.options,
+      'id',
     );
   }
 
-  validate(submittedAnswer: SubmittedAnswer): void {
-    const { optionId } = submittedAnswer;
+  protected validateAnswer(): void {
+    const answer = this.getAnswer()!; // null-checked in validate()
+
+    const { optionId } = answer;
     if (!optionId) {
       throw new BadRequestException(`OptionId is required`);
     }
 
-    const optionIdSet = new Set(Object.keys(this.optionById));
-    const isValidOption = optionIdSet.has(optionId);
+    const isValidOption = this.optionRetriever.hasKey(optionId);
     if (!isValidOption) {
-      throw new BadRequestException(`OptionId (${optionId}) not found`);
+      throw new BadRequestException(`Invalid optionId (${optionId})`);
     }
   }
 
-  transform(submittedAnswer: SubmittedAnswer): SingleChoiceAnswer {
-    const optionId = submittedAnswer.optionId!;
-    const option = this.optionById[optionId];
-    return SingleChoiceAnswerSchema.parse({
+  protected submitFormattedAnswer(submittingAnswer: SubmittingAnswer) {
+    const optionId = submittingAnswer.optionId!;
+    this.questionAnswer.answer = {
       type: QuestionType.SingleChoice,
-      optionId: option.id,
-      label: option.label,
-    });
+      optionId,
+    };
   }
 
-  getNextQuestionId(submittedAnswer: SubmittedAnswer | null): string | null {
-    if (!submittedAnswer) {
+  getNextQuestionId(): string | null {
+    const answer = this.getAnswer();
+    if (!answer) {
       return null;
     }
 
-    const optionId = submittedAnswer.optionId!;
-    return this.optionById[optionId].nextQuestionId ?? null;
+    const selectedOption = this.optionRetriever.get(answer.optionId)!;
+    return selectedOption.nextQuestionId ?? null;
+  }
+
+  private getAnswer() {
+    if (!this.questionAnswer.answer) {
+      return null;
+    }
+
+    // type checked in validate()
+    return this.questionAnswer.answer as SingleChoiceAnswer;
   }
 }
 
-export class MultiChoiceQuestionAnswerStrategy implements QuestionStrategy {
-  constructor(private question: MultiChoiceQuestion) {}
+export class MultiChoiceQuestionAnswerStrategy extends QuestionStrategy {
+  private question: MultiChoiceQuestion;
+  private optionRetriever: ItemRetriever<AnswerOption, 'id'>;
 
-  validate(submittedAnswer: SubmittedAnswer): void {
-    const { optionIds } = submittedAnswer;
+  constructor(
+    protected questionAnswer: QuestionAnswer & {
+      questionSnapshot: MultiChoiceQuestion;
+    },
+  ) {
+    super(questionAnswer);
+
+    this.question = questionAnswer.questionSnapshot;
+    this.optionRetriever = new ItemRetriever(
+      questionAnswer.questionSnapshot.options,
+      'id',
+    );
+  }
+
+  protected validateAnswer(): void {
+    const answer = this.questionAnswer.answer! as MultiChoiceAnswer;
+
+    const { optionIds } = answer;
     if (!optionIds) {
       throw new BadRequestException(`OptionIds is required`);
     }
 
-    const optionIdsSet = new Set(optionIds);
+    const duplicatedOptionIds = optionIds.filter((optionId, index) => {
+      return optionIds.indexOf(optionId) !== index;
+    });
+    if (duplicatedOptionIds.length) {
+      throw new BadRequestException(
+        `Duplicated optionIds (${duplicatedOptionIds})`,
+      );
+    }
 
-    if (optionIdsSet.size < this.question.minSelect) {
+    if (optionIds.length < this.question.minSelect) {
       throw new BadRequestException(
         `Should choice more than ${this.question.minSelect} options`,
       );
     }
 
-    if (optionIdsSet.size > this.question.maxSelect) {
+    if (optionIds.length > this.question.maxSelect) {
       throw new BadRequestException(
         `Should choice less than ${this.question.maxSelect} options`,
       );
     }
 
-    const isValidOption = this.question.options.some((option) => {
-      return optionIdsSet.has(option.id);
-    });
-
-    if (!isValidOption) {
-      throw new BadRequestException(`OptionIds (${optionIdsSet}) not found`);
+    const invalidOptionIds = optionIds.filter(
+      (optionId) => !this.optionRetriever.hasKey(optionId),
+    );
+    if (invalidOptionIds.length) {
+      throw new BadRequestException(`Invalid optionIds (${invalidOptionIds})`);
     }
   }
 
-  transform(submittedAnswer: SubmittedAnswer): MultiChoiceAnswer {
-    const optionIds = submittedAnswer.optionIds!;
-    const optionById = this.question.options.reduce(
-      (acc, option) => {
-        acc[option.id] = option;
-        return acc;
-      },
-      {} as { [key: string]: AnswerOption },
-    );
-    const choices = optionIds.map((optionId) => {
-      return optionById[optionId];
-    });
+  protected submitFormattedAnswer(submittingAnswer: SubmittingAnswer) {
+    const optionIds = submittingAnswer.optionIds!;
 
-    return MultiChoiceAnswerSchema.parse({
+    this.questionAnswer.answer = {
       type: QuestionType.MultiChoice,
-      choices,
-    });
+      optionIds,
+    };
   }
 
-  getNextQuestionId(_submittedAnswer: SubmittedAnswer | null): string | null {
+  getNextQuestionId(): string | null {
     return this.question.nextQuestionId ?? null;
   }
 }
 
-export class TextQuestionAnswerStrategy implements QuestionStrategy {
-  constructor(private question: TextQuestion) {}
+export class TextQuestionAnswerStrategy extends QuestionStrategy {
+  private question: TextQuestion;
 
-  validate(submittedAnswer: SubmittedAnswer): void {
-    const { text } = submittedAnswer;
-    if (!text) {
-      throw new BadRequestException('Text is required');
-    }
+  constructor(
+    protected questionAnswer: QuestionAnswer & {
+      questionSnapshot: TextQuestion;
+    },
+  ) {
+    super(questionAnswer);
+
+    this.question = questionAnswer.questionSnapshot;
   }
 
-  transform(submittedAnswer: SubmittedAnswer): TextAnswer {
-    return TextAnswerSchema.parse({
+  protected validateAnswer(): void {
+    // NOTE: text answer has no specific validation yet
+  }
+
+  protected submitFormattedAnswer(submittingAnswer: SubmittingAnswer) {
+    this.questionAnswer.answer = {
       type: QuestionType.Text,
-      text: submittedAnswer.text!,
-    });
+      text: submittingAnswer.text!,
+    };
   }
 
-  getNextQuestionId(_submittedAnswer: SubmittedAnswer | null): string | null {
+  getNextQuestionId(): string | null {
     return this.question.nextQuestionId ?? null;
   }
 }

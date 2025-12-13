@@ -8,7 +8,7 @@ export interface QuestionAnswerRepository {
     questionAnswer: QuestionAnswer,
   ): Promise<void>;
 
-  getAnswers(sessionId: number): Promise<QuestionAnswer[]>;
+  getQuestionAnswers(sessionId: number): Promise<QuestionAnswer[]>;
 }
 
 export const SQL_QUESTION_ANSWER_REPOSITORY = 'SQL_QUESTION_ANSWER_REPOSITORY';

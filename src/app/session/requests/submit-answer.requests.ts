@@ -1,6 +1,6 @@
 import z from 'zod';
 
-export const SubmittedAnswerSchema = z.object({
+export const SubmittingAnswerSchema = z.object({
   optionId: z.string().optional(),
   optionIds: z.array(z.string()).optional(),
   text: z.string().optional(),
@@ -8,8 +8,8 @@ export const SubmittedAnswerSchema = z.object({
 
 export const SubmitAnswerRequestSchema = z.object({
   questionId: z.string().nonempty(),
-  answer: SubmittedAnswerSchema.nullable(),
+  answer: SubmittingAnswerSchema.nullable(),
 });
 
-export type SubmittedAnswer = z.infer<typeof SubmittedAnswerSchema>;
+export type SubmittingAnswer = z.infer<typeof SubmittingAnswerSchema>;
 export type SubmitAnswerRequest = z.infer<typeof SubmitAnswerRequestSchema>;

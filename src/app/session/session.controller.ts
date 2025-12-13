@@ -3,36 +3,41 @@ import { SessionToken, SessionTokenRequired } from '../common/session-token';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { SessionService } from './session.service';
 import {
-  type CreateSessionRequest,
-  CreateSessionRequestSchema,
-} from './requests/session.requests';
-import {
-  CreateSessionResponse,
-  CreateSessionResponseSchema,
-} from './responses/session.responses';
-import {
   SubmitAnswerRequestSchema,
   type SubmitAnswerRequest,
 } from './requests/submit-answer.requests';
+import {
+  type StartSessionRequest,
+  StartSessionRequestSchema,
+} from './requests/start-session.requests';
+import {
+  type StartSessionResponse,
+  StartSessionResponseSchema,
+} from './responses/start-session.responses';
+import { GetSessionResponse } from './responses/get-session.response';
+import { mapDetailSessionToGetSessionResponse } from './mappers/get-question.mapper';
 
 @Controller('sessions')
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
-  @UsePipes(new ZodValidationPipe(CreateSessionRequestSchema, 'body'))
+  @UsePipes(new ZodValidationPipe(StartSessionRequestSchema, 'body'))
   @Post('/')
   async startSession(
-    @Body() dto: CreateSessionRequest,
-  ): Promise<CreateSessionResponse> {
+    @Body() dto: StartSessionRequest,
+  ): Promise<StartSessionResponse> {
     const session = await this.sessionService.startSession(dto.surveyId);
-    return CreateSessionResponseSchema.parse(session);
+    return StartSessionResponseSchema.parse(session);
   }
 
   @SessionTokenRequired()
   @Get('/')
-  async getDetailSession(@SessionToken() sessionToken: string) {
-    const session = await this.sessionService.getDetailSession(sessionToken);
-    return session;
+  async getDetailSession(
+    @SessionToken() sessionToken: string,
+  ): Promise<GetSessionResponse> {
+    const session =
+      await this.sessionService.getDetailSessionByToken(sessionToken);
+    return mapDetailSessionToGetSessionResponse(session);
   }
 
   @SessionTokenRequired()

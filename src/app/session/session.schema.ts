@@ -8,12 +8,11 @@ export const BaseAnswerSchema = z.object({
 export const SingleChoiceAnswerSchema = BaseAnswerSchema.extend({
   type: z.literal(QuestionType.SingleChoice),
   optionId: z.string(),
-  label: z.string(),
 });
 
 export const MultiChoiceAnswerSchema = BaseAnswerSchema.extend({
   type: z.literal(QuestionType.MultiChoice),
-  choices: z.array(z.object({ optionId: z.string(), label: z.string() })),
+  optionIds: z.array(z.string()),
 });
 
 export const TextAnswerSchema = BaseAnswerSchema.extend({

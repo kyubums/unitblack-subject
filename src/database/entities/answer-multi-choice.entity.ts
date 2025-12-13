@@ -3,7 +3,7 @@ import { CommonEntity } from './common.entity';
 import { QuestionAnswerEntity } from './question-answer.entity';
 
 @Entity()
-export class AnswerChoiceEntity extends CommonEntity {
+export class AnswerMultiChoiceEntity extends CommonEntity {
   @ManyToOne(() => QuestionAnswerEntity)
   questionAnswer: QuestionAnswerEntity;
 

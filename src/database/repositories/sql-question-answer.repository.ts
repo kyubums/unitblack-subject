@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { QuestionAnswerRepository } from 'src/app/session/question-answer.repository';
 import {
   Answer,
@@ -7,27 +7,19 @@ import {
   QuestionAnswerSchema,
   SingleChoiceAnswer,
 } from 'src/app/session/session.schema';
-import {
-  AnswerOption,
-  MultiChoiceQuestion,
-  QuestionType,
-  SingleChoiceQuestion,
-} from 'src/app/survey/survey.schema';
+import { QuestionType } from 'src/app/survey/survey.schema';
 import { EntityManager, Repository } from 'typeorm';
-import { AnswerChoiceEntity } from '../entities/answer-choice.entity';
+import { AnswerMultiChoiceEntity } from '../entities/answer-multi-choice.entity';
+import { AnswerSingleChoiceEntity } from '../entities/answer-single-choice.entity';
 import { AnswerTextEntity } from '../entities/answer-text.entity';
 import { QuestionAnswerEntity } from '../entities/question-answer.entity';
 
 @Injectable()
 export class SQLQuestionAnswerRepository implements QuestionAnswerRepository {
   private readonly repository: Repository<QuestionAnswerEntity>;
-  private readonly answerChoiceRepository: Repository<AnswerChoiceEntity>;
-  private readonly answerTextRepository: Repository<AnswerTextEntity>;
 
   constructor(protected em: EntityManager) {
     this.repository = em.getRepository(QuestionAnswerEntity);
-    this.answerChoiceRepository = em.getRepository(AnswerChoiceEntity);
-    this.answerTextRepository = em.getRepository(AnswerTextEntity);
   }
 
   async hasSubmittedAnswer(
@@ -62,37 +54,38 @@ export class SQLQuestionAnswerRepository implements QuestionAnswerRepository {
   private async saveAnswer(questionAnswerId: number, answer: Answer) {
     switch (answer.type) {
       case QuestionType.SingleChoice:
-        const answerChoiceEntity = this.answerChoiceRepository.create({
+        const answerChoiceEntity = this.em.create(AnswerSingleChoiceEntity, {
           questionAnswerId,
           optionId: answer.optionId,
         });
-        await this.answerChoiceRepository.save(answerChoiceEntity);
+        await this.em.save(answerChoiceEntity);
         return;
       case QuestionType.MultiChoice:
-        const answerChoiceEntities = answer.choices.map(({ optionId }) => {
-          return this.answerChoiceRepository.create({
+        const answerChoiceEntities = answer.optionIds.map((optionId) => {
+          return this.em.create(AnswerMultiChoiceEntity, {
             questionAnswerId,
             optionId,
           });
         });
-        await this.answerChoiceRepository.save(answerChoiceEntities);
+        await this.em.save(answerChoiceEntities);
         return;
       case QuestionType.Text:
-        const answerTextEntity = this.answerTextRepository.create({
+        const answerTextEntity = this.em.create(AnswerTextEntity, {
           questionAnswerId,
           text: answer.text,
         });
-        await this.answerTextRepository.save(answerTextEntity);
+        await this.em.save(answerTextEntity);
         return;
       default:
         throw new Error(`Invalid answer type`);
     }
   }
 
-  async getAnswers(sessionId: number): Promise<QuestionAnswer[]> {
+  async getQuestionAnswers(sessionId: number): Promise<QuestionAnswer[]> {
     const questionAnswerEntities = await this.repository.find({
       relations: {
-        answerChoices: true,
+        answerSingleChoice: true,
+        answerMultiChoices: true,
         answerText: true,
       },
       where: { sessionId },
@@ -105,7 +98,7 @@ export class SQLQuestionAnswerRepository implements QuestionAnswerRepository {
 function mapQuestionAnswerEntityToQuestionAnswer(
   questionAnswerEntity: QuestionAnswerEntity,
 ): QuestionAnswer {
-  const answer = buildAnswer(questionAnswerEntity);
+  const answer = mapQuestionAnswerEntityToAnswer(questionAnswerEntity);
   const questionAnswer: QuestionAnswer = {
     questionId: questionAnswerEntity.questionId,
     questionSnapshot: questionAnswerEntity.questionSnapshot,
@@ -116,20 +109,16 @@ function mapQuestionAnswerEntityToQuestionAnswer(
   return QuestionAnswerSchema.parse(questionAnswer);
 }
 
-function buildAnswer(
+function mapQuestionAnswerEntityToAnswer(
   questionAnswerEntity: QuestionAnswerEntity,
 ): Answer | null {
   switch (questionAnswerEntity.questionSnapshot.type) {
     case QuestionType.SingleChoice:
-      return buildSingleChoiceAnswer(
-        questionAnswerEntity.questionSnapshot,
-        questionAnswerEntity.answerChoices ?? [],
+      return mapSingleChoiceToAnswer(
+        questionAnswerEntity.answerSingleChoice ?? null,
       );
     case QuestionType.MultiChoice:
-      return buildMultiChoiceAnswer(
-        questionAnswerEntity.questionSnapshot,
-        questionAnswerEntity.answerChoices ?? [],
-      );
+      return mapMultiChoicesToAnswer(questionAnswerEntity.answerMultiChoices);
     case QuestionType.Text:
       if (!questionAnswerEntity.answerText) {
         return null;
@@ -144,62 +133,30 @@ function buildAnswer(
   }
 }
 
-function buildSingleChoiceAnswer(
-  question: SingleChoiceQuestion,
-  answerChoices: AnswerChoiceEntity[],
+function mapSingleChoiceToAnswer(
+  singleChoice: AnswerSingleChoiceEntity | null,
 ): SingleChoiceAnswer | null {
-  if (!answerChoices.length) {
+  if (!singleChoice) {
     return null;
-  }
-  const [answerChoiceEntity] = answerChoices;
-  const selectedOption = question.options.find(
-    (option) => option.id === answerChoiceEntity.optionId,
-  );
-  if (!selectedOption) {
-    throw new InternalServerErrorException(
-      `Invalid optionId for AnswerChoice(${answerChoiceEntity.id})`,
-    );
   }
 
   return {
     type: QuestionType.SingleChoice,
-    optionId: selectedOption.id,
-    label: selectedOption.label,
+    optionId: singleChoice.optionId,
   };
 }
 
-function buildMultiChoiceAnswer(
-  question: MultiChoiceQuestion,
-  answerChoices: AnswerChoiceEntity[],
+function mapMultiChoicesToAnswer(
+  multiChoices: AnswerMultiChoiceEntity[],
 ): MultiChoiceAnswer | null {
-  if (!answerChoices.length) {
+  if (!multiChoices.length) {
     return null;
   }
 
-  const optionByIds = question.options.reduce(
-    (acc, option) => {
-      acc[option.id] = option;
-      return acc;
-    },
-    {} as { [key: string]: AnswerOption },
-  );
-
-  const choices = answerChoices.map((choice) => {
-    const option = optionByIds[choice.optionId];
-    if (!option) {
-      throw new InternalServerErrorException(
-        `Invalid optionId for AnswerChoice(${choice.id})`,
-      );
-    }
-
-    return {
-      optionId: option.id,
-      label: option.label,
-    };
-  });
+  const optionIds = multiChoices.map((choice) => choice.optionId);
 
   return {
     type: QuestionType.MultiChoice,
-    choices,
+    optionIds,
   };
 }

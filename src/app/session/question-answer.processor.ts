@@ -1,62 +1,60 @@
-import { BadRequestException } from '@nestjs/common';
-import { Question, QuestionType } from '../survey/survey.schema';
+import { QuestionType } from '../survey/survey.schema';
 import {
   MultiChoiceQuestionAnswerStrategy,
   QuestionStrategy,
   SingleChoiceQuestionAnswerStrategy,
   TextQuestionAnswerStrategy,
 } from './question-answer.strategy';
-import { SubmittedAnswer } from './requests/submit-answer.requests';
-import { Answer, QuestionAnswer } from './session.schema';
+import { SubmittingAnswer } from './requests/submit-answer.requests';
+import { QuestionAnswer } from './session.schema';
 
 export class QuestionAnswerProcessor {
   private strategy: QuestionStrategy;
 
-  constructor(
-    private question: Question,
-    private submittedAnswer: SubmittedAnswer | null,
-  ) {
-    switch (question.type) {
+  constructor(private questionAnswer: QuestionAnswer) {
+    const questionSnapshot = questionAnswer.questionSnapshot;
+    switch (questionSnapshot.type) {
       case QuestionType.SingleChoice:
-        this.strategy = new SingleChoiceQuestionAnswerStrategy(question);
+        this.strategy = new SingleChoiceQuestionAnswerStrategy({
+          ...questionAnswer,
+          questionSnapshot,
+        });
         break;
       case QuestionType.MultiChoice:
-        this.strategy = new MultiChoiceQuestionAnswerStrategy(question);
+        this.strategy = new MultiChoiceQuestionAnswerStrategy({
+          ...questionAnswer,
+          questionSnapshot,
+        });
         break;
       case QuestionType.Text:
-        this.strategy = new TextQuestionAnswerStrategy(question);
+        this.strategy = new TextQuestionAnswerStrategy({
+          ...questionAnswer,
+          questionSnapshot,
+        });
         break;
       default:
         throw new Error(`Invalid question type`);
     }
   }
 
-  getQuestionAnswer(): QuestionAnswer {
-    const answer = this.buildAnswer();
-
-    return {
-      questionId: this.question.id,
-      questionSnapshot: this.question,
-      answer,
-      submittedAt: new Date(),
-    };
-  }
-
-  private buildAnswer(): Answer | null {
-    // If answer is not submitted, validate required only
-    if (!this.submittedAnswer) {
-      if (!this.question.required) {
-        throw new BadRequestException('Answer is Required');
-      }
-
-      return null;
+  submitAnswer(submittingAnswer: SubmittingAnswer | null) {
+    console.log(this.questionAnswer.answer);
+    if (this.questionAnswer.answer) {
+      throw new Error('Answer already submitted');
     }
 
-    this.strategy.validate(this.submittedAnswer);
-    return this.strategy.transform(this.submittedAnswer);
+    this.strategy.submitAnswer(submittingAnswer);
+  }
+
+  validate() {
+    this.strategy.validate();
+  }
+
+  getQuestionAnswer(): QuestionAnswer {
+    return this.strategy.getQuestionAnswer();
   }
 
   getNextQuestionId(): string | null {
-    return this.strategy.getNextQuestionId(this.submittedAnswer);
+    return this.strategy.getNextQuestionId();
   }
 }

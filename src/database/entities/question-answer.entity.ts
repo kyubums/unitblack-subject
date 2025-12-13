@@ -1,9 +1,10 @@
-import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { CommonEntity } from './common.entity';
-import { AnswerChoiceEntity } from './answer-choice.entity';
-import { AnswerTextEntity } from './answer-text.entity';
-import { SessionEntity } from './session.entity';
 import { type Question } from 'src/app/survey/survey.schema';
+import { Column, Entity, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { AnswerMultiChoiceEntity } from './answer-multi-choice.entity';
+import { AnswerSingleChoiceEntity } from './answer-single-choice.entity';
+import { AnswerTextEntity } from './answer-text.entity';
+import { CommonEntity } from './common.entity';
+import { SessionEntity } from './session.entity';
 
 @Entity()
 export class QuestionAnswerEntity extends CommonEntity {
@@ -22,12 +23,12 @@ export class QuestionAnswerEntity extends CommonEntity {
   @Column('json')
   questionSnapshot: Question;
 
-  @OneToMany(
-    () => AnswerChoiceEntity,
-    (answerChoice) => answerChoice.questionAnswer,
-  )
-  answerChoices?: AnswerChoiceEntity[];
+  @OneToOne(() => AnswerSingleChoiceEntity, (entity) => entity.questionAnswer)
+  answerSingleChoice?: AnswerSingleChoiceEntity;
 
-  @OneToOne(() => AnswerTextEntity, (answerText) => answerText.questionAnswer)
+  @OneToMany(() => AnswerMultiChoiceEntity, (entity) => entity.questionAnswer)
+  answerMultiChoices: AnswerMultiChoiceEntity[];
+
+  @OneToOne(() => AnswerTextEntity, (entity) => entity.questionAnswer)
   answerText?: AnswerTextEntity;
 }
