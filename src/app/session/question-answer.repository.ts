@@ -1,6 +1,7 @@
+import { ITransactionableRepository } from '../common/transactionable.repository';
 import { QuestionAnswer } from './session.schema';
 
-export interface QuestionAnswerRepository {
+export interface QuestionAnswerRepository extends ITransactionableRepository {
   hasSubmittedAnswer(sessionId: number, questionId: string): Promise<boolean>;
 
   submitAnswer(

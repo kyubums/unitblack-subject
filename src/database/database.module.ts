@@ -12,6 +12,7 @@ import { SQL_QUESTION_ANSWER_REPOSITORY } from 'src/app/session/question-answer.
 import { SQLQuestionAnswerRepository } from './repositories/sql-question-answer.repository';
 import { AnswerSingleChoiceEntity } from './entities/answer-single-choice.entity';
 import { AnswerMultiChoiceEntity } from './entities/answer-multi-choice.entity';
+import { TransactionService } from './services/transaction.service';
 
 @Module({
   imports: [
@@ -37,11 +38,13 @@ import { AnswerMultiChoiceEntity } from './entities/answer-multi-choice.entity';
       provide: SQL_QUESTION_ANSWER_REPOSITORY,
       useClass: SQLQuestionAnswerRepository,
     },
+    TransactionService,
   ],
   exports: [
     JSON_SURVEY_REPOSITORY,
     SQL_SESSION_REPOSITORY,
     SQL_QUESTION_ANSWER_REPOSITORY,
+    TransactionService,
   ],
 })
 export class DatabaseModule {}

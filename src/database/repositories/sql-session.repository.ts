@@ -7,12 +7,17 @@ import {
 } from 'src/app/session/session.schema';
 import { SessionEntity } from '../entities/session.entity';
 import { EntityManager, Repository } from 'typeorm';
+import { TransactionableRepository } from './transactionable.repository';
 
 @Injectable()
-export class SQLSessionRepository implements SessionRepository {
+export class SQLSessionRepository
+  extends TransactionableRepository
+  implements SessionRepository
+{
   private readonly repository: Repository<SessionEntity>;
 
   constructor(protected em: EntityManager) {
+    super(em);
     this.repository = em.getRepository(SessionEntity);
   }
 
@@ -39,17 +44,20 @@ export class SQLSessionRepository implements SessionRepository {
   }
 
   // update session: isCompleted, nextQuestionId
-  async updateSession(session: Session): Promise<Session> {
+  async updateSession(
+    id: number,
+    updateSession: Pick<Session, 'isCompleted' | 'nextQuestionId'>,
+  ): Promise<Session> {
     const sessionEntity = await this.repository.findOne({
-      where: { uuid: session.uuid },
+      where: { id },
     });
 
     if (!sessionEntity) {
-      throw new NotFoundException(`Session ${session.uuid} not found`);
+      throw new NotFoundException(`Session not found`);
     }
 
-    sessionEntity.isCompleted = session.isCompleted;
-    sessionEntity.nextQuestionId = session.nextQuestionId ?? undefined;
+    sessionEntity.isCompleted = updateSession.isCompleted;
+    sessionEntity.nextQuestionId = updateSession.nextQuestionId ?? undefined;
 
     await this.repository.save(sessionEntity);
 

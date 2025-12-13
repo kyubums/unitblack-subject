@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
-import { DetailSession } from './session.schema';
+import { DetailSession } from '../session.schema';
 
 export class SessionProcessor {
   constructor(private detailSession: DetailSession) {}

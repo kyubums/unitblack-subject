@@ -16,6 +16,7 @@ import {
 } from './responses/start-session.responses';
 import { GetSessionResponse } from './responses/get-session.response';
 import { mapDetailSessionToGetSessionResponse } from './mappers/get-question.mapper';
+import { SubmitAnswerResponse } from './responses/submit-answer.response';
 
 @Controller('sessions')
 export class SessionController {
@@ -46,9 +47,8 @@ export class SessionController {
   async submitAnswer(
     @SessionToken() sessionToken: string,
     @Body() dto: SubmitAnswerRequest,
-  ) {
-    const result = await this.sessionService.submitAnswer(sessionToken, dto);
-
-    return result;
+  ): Promise<SubmitAnswerResponse> {
+    const response = await this.sessionService.submitAnswer(sessionToken, dto);
+    return response;
   }
 }

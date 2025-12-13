@@ -7,13 +7,13 @@ import {
 } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 import { SurveyService } from '../survey/survey.service';
-import { QuestionAnswerProcessor } from './question-answer.processor';
+import { QuestionAnswerProcessor } from './processor/question-answer.processor';
 import {
   SQL_QUESTION_ANSWER_REPOSITORY,
   type QuestionAnswerRepository,
 } from './question-answer.repository';
 import { SubmitAnswerRequest } from './requests/submit-answer.requests';
-import { SessionProcessor } from './session.processor';
+import { SessionProcessor } from './processor/session.processor';
 import {
   SQL_SESSION_REPOSITORY,
   type SessionRepository,
@@ -24,11 +24,14 @@ import {
   QuestionAnswer,
   Session,
 } from './session.schema';
+import { TransactionService } from 'src/database/services/transaction.service';
+import { SubmitAnswerResponse } from './responses/submit-answer.response';
 
 @Injectable()
 export class SessionService {
   constructor(
     private readonly surveyService: SurveyService,
+    private readonly transactionService: TransactionService,
 
     @Inject(SQL_SESSION_REPOSITORY)
     private readonly sessionRepository: SessionRepository,
@@ -84,7 +87,10 @@ export class SessionService {
     };
   }
 
-  async submitAnswer(token: string, dto: SubmitAnswerRequest) {
+  async submitAnswer(
+    token: string,
+    dto: SubmitAnswerRequest,
+  ): Promise<SubmitAnswerResponse> {
     const detailSession = await this.getDetailSessionByToken(token);
 
     // check if submittable
@@ -120,15 +126,16 @@ export class SessionService {
     const nextQuestionId = questionAnswerProcessor.getNextQuestionId();
     const isCompleted = nextQuestionId === null;
 
-    await this.questionAnswerRepository.submitAnswer(
-      detailSession.id,
-      questionAnswer,
-    );
+    await this.transactionService.execute(async (em) => {
+      await this.questionAnswerRepository
+        .withTX(em)
+        .submitAnswer(detailSession.id, questionAnswer);
 
-    detailSession.nextQuestionId = nextQuestionId;
-    detailSession.isCompleted = isCompleted;
-
-    await this.sessionRepository.updateSession(detailSession);
+      await this.sessionRepository.withTX(em).updateSession(detailSession.id, {
+        isCompleted: isCompleted,
+        nextQuestionId: nextQuestionId,
+      });
+    });
 
     return {
       nextQuestionId,

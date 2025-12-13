@@ -13,12 +13,18 @@ import { AnswerMultiChoiceEntity } from '../entities/answer-multi-choice.entity'
 import { AnswerSingleChoiceEntity } from '../entities/answer-single-choice.entity';
 import { AnswerTextEntity } from '../entities/answer-text.entity';
 import { QuestionAnswerEntity } from '../entities/question-answer.entity';
+import { TransactionableRepository } from './transactionable.repository';
 
 @Injectable()
-export class SQLQuestionAnswerRepository implements QuestionAnswerRepository {
+export class SQLQuestionAnswerRepository
+  extends TransactionableRepository
+  implements QuestionAnswerRepository
+{
   private readonly repository: Repository<QuestionAnswerEntity>;
 
   constructor(protected em: EntityManager) {
+    super(em);
+
     this.repository = em.getRepository(QuestionAnswerEntity);
   }
 

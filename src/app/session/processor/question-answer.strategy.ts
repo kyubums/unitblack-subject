@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { ItemRetriever } from '../common/item-retriever';
+import { ItemRetriever } from '../../common/item-retriever';
 import {
   AnswerOption,
   MultiChoiceQuestion,
@@ -7,13 +7,13 @@ import {
   QuestionType,
   SingleChoiceQuestion,
   TextQuestion,
-} from '../survey/survey.schema';
-import { SubmittingAnswer } from './requests/submit-answer.requests';
+} from '../../survey/survey.schema';
+import { SubmittingAnswer } from '../requests/submit-answer.requests';
 import {
   MultiChoiceAnswer,
   QuestionAnswer,
   SingleChoiceAnswer,
-} from './session.schema';
+} from '../session.schema';
 
 export abstract class QuestionStrategy {
   constructor(protected questionAnswer: QuestionAnswer) {}
