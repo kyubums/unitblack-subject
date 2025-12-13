@@ -1,29 +1,18 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 import { SurveyService } from '../survey/survey.service';
-import { QuestionAnswerHelper } from './question-answer.helper';
+import { QuestionAnswerProcessor } from './question-answer.processor';
 import {
   SQL_QUESTION_ANSWER_REPOSITORY,
   type QuestionAnswerRepository,
 } from './question-answer.repository';
 import { SubmitAnswerRequest } from './requests/submit-answer.requests';
+import { SessionProcessor } from './session.processor';
 import {
   SQL_SESSION_REPOSITORY,
   type SessionRepository,
 } from './session.repository';
-import {
-  DetailSession,
-  DetailSessionSchema,
-  NewSession,
-  QuestionAnswer,
-  QuestionAnswerSchema,
-  Session,
-} from './session.schema';
+import { DetailSession, NewSession, Session } from './session.schema';
 
 @Injectable()
 export class SessionService {
@@ -64,60 +53,46 @@ export class SessionService {
     const session = await this.getSessionByToken(token);
     const answers = [];
 
-    return DetailSessionSchema.parse({
-      uuid: session.uuid,
-      surveyId: session.surveyId,
-      isCompleted: session.isCompleted,
-      nextQuestionId: session.nextQuestionId,
+    return {
+      ...session,
       answers,
-    });
+    };
   }
 
   async submitAnswer(token: string, dto: SubmitAnswerRequest) {
-    const session = await this.getSessionByToken(token);
+    const detailSession = await this.getDetailSession(token);
 
-    const hasSubmittedAnswer =
-      await this.questionAnswerRepository.hasSubmittedAnswer(
-        session.id,
-        dto.questionId,
-      );
-    if (hasSubmittedAnswer) {
-      throw new BadRequestException('Already submitted');
-    }
-
-    if (session.nextQuestionId !== dto.questionId) {
-      throw new BadRequestException('Not next question');
-    }
+    // check if submittable
+    const sessionProcessor = new SessionProcessor(detailSession);
+    sessionProcessor.checkSubmittable(dto.questionId);
 
     const surveyQuestion = await this.surveyService.getSurveyQuestion(
-      session.surveyId,
+      detailSession.surveyId,
       dto.questionId,
     );
-    const questionAnswerHelper = new QuestionAnswerHelper(
+
+    // validate and build QuestionAnswer and get nextQuestionId
+    const questionAnswerProcessor = new QuestionAnswerProcessor(
       surveyQuestion,
       dto.answer,
     );
-    questionAnswerHelper.validateAndTransform();
-    const questionAnswer: QuestionAnswer = QuestionAnswerSchema.parse({
-      questionId: surveyQuestion.id,
-      questionText: surveyQuestion.text,
-      answer: questionAnswerHelper.getAnswer() ?? null,
-      submittedAt: new Date(),
-    });
+    const questionAnswer = questionAnswerProcessor.getQuestionAnswer();
+    const nextQuestionId = questionAnswerProcessor.getNextQuestionId();
+    const isCompleted = nextQuestionId === null;
 
     await this.questionAnswerRepository.submitAnswer(
-      session.id,
+      detailSession.id,
       questionAnswer,
     );
 
-    session.nextQuestionId = questionAnswerHelper.getNextQuestionId();
-    session.isCompleted = !session.nextQuestionId;
+    detailSession.nextQuestionId = nextQuestionId;
+    detailSession.isCompleted = isCompleted;
 
-    await this.sessionRepository.updateSession(session);
+    await this.sessionRepository.updateSession(detailSession);
 
     return {
-      nextQuestionId: session.nextQuestionId,
-      completed: session.isCompleted,
+      nextQuestionId,
+      completed: isCompleted,
       submittedAt: questionAnswer.submittedAt,
     };
   }

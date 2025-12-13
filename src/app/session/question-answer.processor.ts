@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { Question, QuestionType } from '../survey/survey.schema';
 import {
   MultiChoiceQuestionAnswerStrategy,
@@ -6,11 +7,10 @@ import {
   TextQuestionAnswerStrategy,
 } from './question-answer.strategy';
 import { SubmittedAnswer } from './requests/submit-answer.requests';
-import { Answer } from './session.schema';
+import { Answer, QuestionAnswer } from './session.schema';
 
-export class QuestionAnswerHelper {
+export class QuestionAnswerProcessor {
   private strategy: QuestionStrategy;
-  private transformedAnswer: Answer | null;
 
   constructor(
     private question: Question,
@@ -31,21 +31,29 @@ export class QuestionAnswerHelper {
     }
   }
 
-  validateAndTransform() {
-    if (!this.submittedAnswer) {
-      if (this.question.required) {
-        throw new Error('Answer is Required');
-      }
-      return null;
-    }
-    this.strategy.validate(this.submittedAnswer);
-    this.transformedAnswer = this.submittedAnswer
-      ? this.strategy.transform(this.submittedAnswer)
-      : null;
+  getQuestionAnswer(): QuestionAnswer {
+    const answer = this.buildAnswer();
+
+    return {
+      questionId: this.question.id,
+      questionSnapshot: this.question,
+      answer,
+      submittedAt: new Date(),
+    };
   }
 
-  getAnswer(): Answer | null {
-    return this.transformedAnswer;
+  private buildAnswer(): Answer | null {
+    // If answer is not submitted, validate required only
+    if (!this.submittedAnswer) {
+      if (!this.question.required) {
+        throw new BadRequestException('Answer is Required');
+      }
+
+      return null;
+    }
+
+    this.strategy.validate(this.submittedAnswer);
+    return this.strategy.transform(this.submittedAnswer);
   }
 
   getNextQuestionId(): string | null {

@@ -132,7 +132,7 @@ export class TextQuestionAnswerStrategy implements QuestionStrategy {
   validate(submittedAnswer: SubmittedAnswer): void {
     const { text } = submittedAnswer;
     if (!text) {
-      throw new BadRequestException(`Text is required`);
+      throw new BadRequestException('Text is required');
     }
   }
 

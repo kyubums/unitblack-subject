@@ -3,6 +3,7 @@ import { CommonEntity } from './common.entity';
 import { AnswerChoiceEntity } from './answer-choice.entity';
 import { AnswerTextEntity } from './answer-text.entity';
 import { SessionEntity } from './session.entity';
+import { type Question } from 'src/app/survey/survey.schema';
 
 @Entity()
 export class QuestionAnswerEntity extends CommonEntity {
@@ -17,6 +18,9 @@ export class QuestionAnswerEntity extends CommonEntity {
 
   @Column()
   submittedAt: Date;
+
+  @Column('json')
+  questionSnapshot: Question;
 
   @OneToMany(
     () => AnswerChoiceEntity,

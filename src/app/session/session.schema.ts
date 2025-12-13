@@ -1,5 +1,5 @@
 import z from 'zod';
-import { QuestionType } from '../survey/survey.schema';
+import { QuestionSchema, QuestionType } from '../survey/survey.schema';
 
 export const BaseAnswerSchema = z.object({
   type: z.enum(QuestionType),
@@ -29,7 +29,7 @@ export const AnswerSchema = z.discriminatedUnion('type', [
 
 export const QuestionAnswerSchema = z.object({
   questionId: z.string(),
-  questionText: z.string(),
+  questionSnapshot: QuestionSchema,
   answer: AnswerSchema.nullable(),
   submittedAt: z.date(),
 });
@@ -48,10 +48,7 @@ export const NewSessionSchema = SessionSchema.omit({
   uuid: true,
 });
 
-export const DetailSessionSchema = SessionSchema.omit({
-  id: true,
-  sessionToken: true,
-}).extend({
+export const DetailSessionSchema = SessionSchema.extend({
   answers: z.array(QuestionAnswerSchema),
 });
 

@@ -22,8 +22,7 @@ export class ZodValidationPipe implements PipeTransform {
       return parsedValue;
     } catch (error) {
       if (error instanceof ZodError) {
-        console.log(error);
-        throw new BadRequestException(z.treeifyError(error));
+        throw new BadRequestException(z.treeifyError(error).errors.join('\n'));
       }
 
       throw new BadRequestException('Validation failed');
