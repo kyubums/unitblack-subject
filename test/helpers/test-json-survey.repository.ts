@@ -1,5 +1,4 @@
 import { Config, JsonDB } from 'node-json-db';
-import path from 'path';
 import { JSONSurveyRepository } from 'src/database/repositories/json-survey.repository';
 
 export class TestableJSONSurveyRepository extends JSONSurveyRepository {
