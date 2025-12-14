@@ -1,12 +1,12 @@
 import { QuestionType } from '../../survey/survey.schema';
+import { SubmittingAnswer } from '../requests/submit-answer.requests';
+import { QuestionAnswer } from '../session.schema';
 import {
   MultiChoiceQuestionAnswerStrategy,
   QuestionStrategy,
   SingleChoiceQuestionAnswerStrategy,
   TextQuestionAnswerStrategy,
 } from './question-answer.strategy';
-import { SubmittingAnswer } from '../requests/submit-answer.requests';
-import { QuestionAnswer } from '../session.schema';
 
 export class QuestionAnswerProcessor {
   private strategy: QuestionStrategy;
