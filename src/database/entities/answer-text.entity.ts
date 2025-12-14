@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { QuestionAnswerEntity } from './question-answer.entity';
 
@@ -9,6 +9,7 @@ export class AnswerTextEntity extends CommonEntity {
   questionAnswer: QuestionAnswerEntity;
 
   @Column()
+  @Index()
   questionAnswerId: number;
 
   @Column()

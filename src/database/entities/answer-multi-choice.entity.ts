@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { CommonEntity } from './common.entity';
 import { QuestionAnswerEntity } from './question-answer.entity';
 
@@ -8,6 +8,7 @@ export class AnswerMultiChoiceEntity extends CommonEntity {
   questionAnswer: QuestionAnswerEntity;
 
   @Column()
+  @Index()
   questionAnswerId: number;
 
   @Column()
