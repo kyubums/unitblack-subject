@@ -1,4 +1,4 @@
-# Unitblack Subject - Survey Service
+# Unitblack Subject - Survey Service | 작성자: 최규범
 
 설문조사 서비스를 제공하는 REST API 서버입니다. 사용자는 설문조사를 시작하고, 세션 내에서 질문에 순차적으로 답변합니다.
 
