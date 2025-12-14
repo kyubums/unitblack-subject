@@ -1,14 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppModule } from 'src/app/app.module';
+import { SubmittingAnswer } from 'src/app/session/requests/submit-answer.requests';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { SubmittingAnswer } from 'src/app/session/requests/submit-answer.requests';
-import { AppModule } from 'src/app/app.module';
-import { TestPostgresContainer } from './helpers/test-postgres-container';
 
 describe('Session E2E', () => {
   let app: INestApplication<App>;
-  let testContainer: TestPostgresContainer;
 
   // 시나리오 정의: 세션 시작부터 완료까지의 한 경로
   const testScenario = {
@@ -66,24 +64,6 @@ describe('Session E2E', () => {
       },
     ],
   };
-
-  beforeAll(async () => {
-    // Testcontainers로 테스트용 PostgreSQL 시작
-    testContainer = new TestPostgresContainer();
-    await testContainer.start();
-
-    // 환경변수 설정 (기존 DatabaseModule이 이 값을 사용)
-    process.env.DATABASE_URL = testContainer.getConnectionUri();
-    process.env.MIGRATION_RUN = 'true';
-  });
-
-  afterAll(async () => {
-    // 테스트용 컨테이너 정리
-    await testContainer.stop();
-
-    delete process.env.DATABASE_URL;
-    delete process.env.MIGRATION_RUN;
-  });
 
   beforeEach(async () => {
     // 기존 AppModule 사용 (환경변수로 테스트 DB 연결)

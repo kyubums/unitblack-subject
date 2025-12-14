@@ -16,6 +16,6 @@ export class SessionEntity extends CommonEntity {
   @Column()
   isCompleted: boolean;
 
-  @Column({ nullable: true })
-  nextQuestionId?: string;
+  @Column({ type: 'varchar', nullable: true })
+  nextQuestionId: string | null;
 }

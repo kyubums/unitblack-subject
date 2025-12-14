@@ -26,7 +26,7 @@ export class SQLSessionRepository
     sessionEntity.token = newSession.sessionToken;
     sessionEntity.surveyId = newSession.surveyId;
     sessionEntity.isCompleted = newSession.isCompleted;
-    sessionEntity.nextQuestionId = newSession.nextQuestionId ?? undefined;
+    sessionEntity.nextQuestionId = newSession.nextQuestionId;
 
     await this.repository.save(sessionEntity);
 
@@ -57,7 +57,7 @@ export class SQLSessionRepository
     }
 
     sessionEntity.isCompleted = updateSession.isCompleted;
-    sessionEntity.nextQuestionId = updateSession.nextQuestionId ?? undefined;
+    sessionEntity.nextQuestionId = updateSession.nextQuestionId;
 
     await this.repository.save(sessionEntity);
 

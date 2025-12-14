@@ -98,6 +98,14 @@ yarn test
 yarn test:e2e
 ```
 
+### 테스트 전략
+
+1. 복잡한 비즈니스 로직은 Processor, Strategy 등 단위 테스트로 검증
+
+2. Service 로직은 의존된 로직이 호출되는지, repository 로의 전달 값이 올바른지 검증
+
+3. e2e 테스트는 시나리오를 제공하여 기대된 결과가 동작하는지 검증
+
 ## 기타
 
 ### 가정 (Assumption)
@@ -128,3 +136,8 @@ yarn test:e2e
    - **선택**: 모델은 데이터 정의만, 비즈니스 로직을 Service 및 Processor 가 담당 (Functional 스타일)
    - **이유**: 클래스 인스턴스 생성 및 검증 오버헤드 감소, 테스트 용이성, 모델의 비대화 방지
    - **단점**: 모델의 자체적인 Constraint 가 서비스 로직에 의존됨.
+
+### 구현하지 못한 부분
+
+1. **테스트 환경의 Sandbox 화**: 테스트 데이터베이스를 분리하려고 시도하였지만, 자동 Migration 동작의 문제로 인하여 실행되지 않아 local db 가 e2e 테스트에 사용 됨.
+   testcontainers 와 같은 container 환경을 사용하여 개선 가능 하겠지만, 시스템 의존성이 늘어나기 때문에 제외함.
