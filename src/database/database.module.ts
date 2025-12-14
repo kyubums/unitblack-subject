@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SQLITE_CONFIG } from './database.config';
+import { POSTGRES_CONFIG } from './database.config';
 import { JSON_SURVEY_REPOSITORY } from 'src/app/survey/survey.repository';
 import { JSONSurveyRepository } from './repositories/json-survey.repository';
 import { SessionEntity } from './entities/session.entity';
@@ -16,7 +16,7 @@ import { TransactionService } from './services/transaction.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(SQLITE_CONFIG),
+    TypeOrmModule.forRoot(POSTGRES_CONFIG),
     TypeOrmModule.forFeature([
       SessionEntity,
       QuestionAnswerEntity,
