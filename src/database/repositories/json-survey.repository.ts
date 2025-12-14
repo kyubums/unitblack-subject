@@ -6,7 +6,7 @@ import { Survey, SurveySchema } from 'src/app/survey/survey.schema';
 
 @Injectable()
 export class JSONSurveyRepository implements SurveyRepository {
-  private db: JsonDB;
+  protected db: JsonDB;
 
   constructor() {
     const filePath = path.resolve(__dirname, '../../../json/survey.json');
@@ -25,11 +25,19 @@ export class JSONSurveyRepository implements SurveyRepository {
       return null;
     }
 
-    const survey = await this.db.getData(`/${id}`);
-    if (!survey) {
-      return null;
-    }
+    try {
+      const survey = await this.db.getData(`/${id}`);
+      if (!survey) {
+        return null;
+      }
 
-    return SurveySchema.parse(survey);
+      return SurveySchema.parse(survey);
+    } catch (error: any) {
+      // node-json-db가 존재하지 않는 경로에 접근하면 DataError를 던짐
+      if (error.name === 'DataError') {
+        return null;
+      }
+      throw error;
+    }
   }
 }

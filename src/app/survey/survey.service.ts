@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   JSON_SURVEY_REPOSITORY,
   type SurveyRepository,
@@ -17,9 +17,13 @@ export class SurveyService {
   }
 
   async getSurveyById(surveyId: string): Promise<Survey> {
+    if (!surveyId) {
+      throw new BadRequestException('Survey ID is required');
+    }
+
     const survey = await this.surveyRepository.getServeyById(surveyId);
     if (!survey) {
-      throw new NotFoundException(`Survey ${surveyId} not found`);
+      throw new NotFoundException(`Survey(${surveyId}) not found`);
     }
 
     return survey;
@@ -33,7 +37,7 @@ export class SurveyService {
     const question = survey.questions.find((q) => q.id === questionId);
     if (!question) {
       throw new NotFoundException(
-        `Question ${questionId} of Survey ${surveyId} not found`,
+        `Question(${questionId}) of Survey(${surveyId}) not found`,
       );
     }
 

@@ -1,0 +1,36 @@
+{
+  "test-survey-1": {
+    "id": "test-survey-1",
+    "title": "테스트 설문 1",
+    "version": 1,
+    "startQuestionId": "q1",
+    "questions": [
+      {
+        "id": "q1",
+        "type": "singleChoice",
+        "text": "테스트 질문 1",
+        "required": true,
+        "options": [
+          {
+            "id": "o1",
+            "label": "옵션 1"
+          }
+        ]
+      }
+    ]
+  },
+  "test-survey-2": {
+    "id": "test-survey-2",
+    "title": "테스트 설문 2",
+    "version": 1,
+    "startQuestionId": "q2",
+    "questions": [
+      {
+        "id": "q2",
+        "type": "text",
+        "text": "테스트 질문 2",
+        "required": false
+      }
+    ]
+  }
+}
