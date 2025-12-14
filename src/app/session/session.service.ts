@@ -42,11 +42,9 @@ export class SessionService {
   async startSession(surveyId: string): Promise<Session> {
     const survey = await this.surveyService.getSurveyById(surveyId);
 
-    const sessionToken = nanoid(); // 토큰발급
-
     const newSession: NewSession = {
       surveyId: survey.id,
-      sessionToken,
+      sessionToken: this.generateSessionToken(),
       isCompleted: false,
       nextQuestionId: survey.startQuestionId,
     };
@@ -75,10 +73,11 @@ export class SessionService {
 
       try {
         questionAnswerProcessor.validate();
-        return questionAnswerProcessor.getQuestionAnswer();
       } catch (error) {
         throw new InternalServerErrorException(error.message);
       }
+
+      return questionAnswerProcessor.getQuestionAnswer();
     });
 
     return {
@@ -142,5 +141,9 @@ export class SessionService {
       completed: isCompleted,
       submittedAt: questionAnswer.submittedAt,
     };
+  }
+
+  generateSessionToken(): string {
+    return nanoid();
   }
 }
