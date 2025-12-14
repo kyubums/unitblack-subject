@@ -38,7 +38,6 @@ export class QuestionAnswerProcessor {
   }
 
   submitAnswer(submittingAnswer: SubmittingAnswer | null) {
-    console.log(this.questionAnswer.answer);
     if (this.questionAnswer.answer) {
       throw new Error('Answer already submitted');
     }
